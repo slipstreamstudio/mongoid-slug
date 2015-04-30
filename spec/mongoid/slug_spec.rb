@@ -102,7 +102,7 @@ module Mongoid
       end
 
       it "does not allow a BSON::ObjectId as use for a slug" do
-        bson_id = Mongoid::Slug.mongoid3? ? Moped::BSON::ObjectId.new.to_s : BSON::ObjectId.new.to_s
+        bson_id = defined?( Moped::BSON ) ? Moped::BSON::ObjectId.new.to_s : BSON::ObjectId.new.to_s
         bad = Book.create(:title => bson_id)
         bad.slugs.should_not include(bson_id)
       end
