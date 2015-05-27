@@ -67,9 +67,24 @@ module Mongoid
         field :_slugs, type: Array, default: [], localize: options[:localize]
         alias_attribute :slugs, :_slugs
 
-        # Set index
         unless embedded?
-          index(*Mongoid::Slug::Index.build_index(self.slug_scope_key, self.by_model_type))
+          if slug_scope
+            scope_key = (metadata = self.reflect_on_association(slug_scope)) ? metadata.key : slug_scope
+            if options[:by_model_type] == true
+              # Add _type to the index to fix polymorphism
+              index({ _type: 1, scope_key => 1, _slugs: 1})
+            else
+              index({scope_key => 1, _slugs: 1}, {unique: true, sparse: true})
+            end
+
+          else
+            # Add _type to the index to fix polymorphism
+            if options[:by_model_type] == true
+              index({_type: 1, _slugs: 1})
+            else
+              index({_slugs: 1}, {unique: true, sparse: true})
+            end
+          end
         end
 
         #-- Why is it necessary to customize the slug builder?
